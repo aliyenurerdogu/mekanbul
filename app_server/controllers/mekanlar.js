@@ -1,70 +1,92 @@
-const anaSayfa = function(req,res){
-    res.render('anasayfa', 
-    { 
+const axios=require("axios");
+var apiSecenekleri = {
+    //sunucu: "http://localhost:3000",
+    sunucu: "https://mekanbul.aliyenurerdogu.repl.co",
+    apiYolu: "/api/mekanlar/"
+}
+var mesafeyiFormatla=function(mesafe){
+var yeniMesafe,birim;
+if(mesafe>1){
+    yeniMesafe=parseFloat(mesafe).toFixed(1);
+    birim=" km";
+}
+else{
+    yeniMesafe=parseInt(mesafe*1000,10);
+    birim=" m";
+}
+return yeniMesafe+birim;
+}
+var anasayfaOlustur=function(res,mekanlistesi){
+    var mesaj;
+    if(!(mekanlistesi instanceof Array)){
+        mesaj="API HATASI:bir şeyler ters gitti.";
+        mekanlistesi=[];
+    }else{
+        if(!mekanlistesi.length){
+            mesaj="civarda herhangi bir mekan yok ";
+        }
+    }
+    res.render("anasayfa",{
     "baslik": "Anasayfa",
     "sayfaBaslik":{
-        "siteAd":"MekanBul",
-        "slogan":"Civardaki Mekanları Kesfet"
+        "siteAd":"Mekanbul",
+        "slogan":"Mekanları Keşfet"
     },
-    "mekanlar":[
-        {
-            "ad": "starbucks",
-            "puan":"3",
-            "adres":"centrum garden avm",
-            "imkanlar":["dünya kahveleri","pastalar","kekler"],
-            "mesafe":"10km"
-                    
-        },
-        { 
-            "ad": "gloria jeans",
-            "puan":"1",
-            "adres":"SDÜ Doğu Kampüsü",
-            "imkanlar":["cay","kek","kahve"],
-            "mesafe":"5km"
-        }   
-    ]
+    "mekanlar":mekanlistesi,
+    "mesaj":mesaj
 });
+
+}
+var detaySayfasiOlustur = function(res,mekanDetaylari){
+    mekanDetaylari.koordinat={
+        "enlem":mekanDetaylari.koordinat[0],
+        "boylam":mekanDetaylari.koordinat[1]
+    }
+    res.render('mekanbilgisi',
+    {
+        mekanBaslik: mekanDetaylari.ad,
+        mekanDetay:mekanDetaylari
+    });
+}
+var hataGoster = function(res,hata){
+    var mesaj;
+    if(hata.response.status==404){
+        mesaj="404, Sayfa Bulunamadı!";
+    }else {
+        mesaj=hata.response.status+" hatası";
+    }
+    res.status(hata.response.status);
+    res.render('error',{
+        "mesaj":mesaj
+    });
+};
+const anaSayfa = function(req,res){
+    axios.get(apiSecenekleri.sunucu+apiSecenekleri.apiYolu,{
+        params:{
+            enlem:req.query.enlem,
+            boylam:req.query.boylam
+        }
+    }).then(function(response){
+        var i,mekanlar;
+        mekanlar=response.data;
+        for(i=0;i<mekanlar.length;i++){
+            mekanlar[i].mesafe=mesafeyiFormatla(mekanlar[i].mesafe);
+        }
+        anasayfaOlustur(res,mekanlar);
+    }).catch(function(hata){
+        anasayfaOlustur(res,hata);
+    });
 }
 const mekanBilgisi = function(req,res){
-    res.render('mekanbilgisi',
-     {
-        "baslik": "Mekan Bilgisi",
-        "mekanBaslik" : "Starbucks",
-        "mekanDetay":{
-            "ad":"Starbucks",
-            "puan":"3",
-            "adres":"Centrum Garden avm",
-            "saatler":[
-                {
-                    "gunler":"pazartesi-cuma",
-                    "acilis":"9:00",
-                    "kapanis":"23:00",
-                    "kapali": false
-                },
-                {
-                    "gunler":"cumartesi-pazar",
-                    "acilis":"8:00",
-                    "kapanis":"22:00",
-                    "kapali": false
-                }
-            ],
-            "imkanlar":["kahve","çay","kek"],
-            "koordinatlar":
-            {
-                "enlem":"37.78175",
-                "boylam":"30.565071"
-            },
-            "yorumlar":[
-                {
-                    "yorumYapan":"Asım Sinan",
-                    "yorumMetini":"berbaaat",
-                    "tarih":"20 ekim 2022",
-                    "puan":"1"
-                }
-            ]
-        }
-});
-}
+    axios
+        .get(apiSecenekleri.sunucu + apiSecenekleri.apiYolu + req.params.mekanid)
+        .then(function (response){
+            detaySayfasiOlustur(res, response.data);
+        })
+        .catch(function (hata){
+            hataGoster(res,hata);
+        });
+};
 const yorumEkle=function(req,res,){
     res.render('yorumekle', { "title":"Yorum Sayfası" });
 };
