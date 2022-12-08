@@ -72,6 +72,9 @@ const yorumEkle=(req,res) => {
         res.status(404).json({"mesaj":"Mekan bulunamadı"});
     }
 }
+const yorumumuEkle = function(req,res){
+    
+}
 const yorumSil=function(req,res){
     if(!req.params.mekanid || !req.params.yorumid) {
         cevapOlustur(res, 404, {"mesaj":"bulunamadı. mekanid ve yorumid gerekli"});

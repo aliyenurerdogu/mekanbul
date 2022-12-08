@@ -11,7 +11,7 @@ block content
                 .col-xs-12.col-sm-6 
                     p.rating
                         +puanOlustur(mekanDetay.puan)
-                    p  Centrum Garden AVM 
+                    p  #{mekanDetay.adres} 
                     .panel.panel-primary
                         .panel-heading
                              h2.panel-title Açılış Saatleri
@@ -43,7 +43,8 @@ block content
         .col-xs-12
             .panel.panel-primary
                 .panel-heading
-                    a.btn.btn-default.pull-right(href='/mekan/yorum/yeni') Yorum Ekle
+                    -var mekanid=mekanDetay._id
+                    a.btn.btn-default.pull-right(href='/mekan/'+mekanid+'/yorum/yeni') Yorum Ekle
                     h2.panel-title Müşteri Yorumları
                 .panel-body.review-container
                     each yorum in mekanDetay.yorumlar
@@ -54,7 +55,7 @@ block content
                                         +puanOlustur(yorum.puan) 
                                     span.review-author= yorum.yorumYapan
                                     small.reviewTimestamp &nbsp;
-                                    +tarihformatla(yorum.tarih)
+                                    +tarihFormatla(yorum.tarih)
                                 .col-xs-12
-                                    p= yorum.yorumMetini
+                                    p= yorum.yorumMetni
                                 
